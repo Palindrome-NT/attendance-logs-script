@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from zk import ZK
 
-
 load_dotenv()
 
 def fetch_last_processed_time():
@@ -61,26 +60,33 @@ def fetch_and_process_logs():
     company_id = os.getenv('COMPANY_ID')
     api_url = os.getenv('API_URL')
 
-    zk = ZK(device_ip, port=4370)
-    last_processed_time = fetch_last_processed_time() or datetime(2025, 5, 1) # Specify the start date (in yyyy-mm-dd format) from which logs should be saved to the database.
+    # Define your desired start and end dates (with time)
+    start_date = datetime(2025, 4, 20, 10,30, 0)
+    end_date = datetime(2025, 4, 29, 15, 0, 0)
+    # Use the stored last_processed_time or default to the start_date.
+    last_processed_time = fetch_last_processed_time() or start_date
 
     current_day_logs = load_current_day_logs()
     today_date = datetime.now().date()
 
+    # Commented out the reset line because we're using bounded dates.
     # if current_day_logs and today_date != datetime.strptime(list(current_day_logs.values())[0]['log_date'], "%Y-%m-%d").date():
     #     current_day_logs = {}
 
     try:
-        conn = zk.connect()
+        conn = ZK(device_ip, port=4370).connect()
         print("Connected to the device.")
         
         attendance_logs = conn.get_attendance()
         logs_to_send = []
-
         current_time = datetime.now()
 
         for log in attendance_logs:
             log_time = log.timestamp
+            # Process only if log_time is within our desired window.
+            if log_time < start_date or log_time > end_date:
+                continue
+
             employee_id = log.user_id
             log_date = log_time.date()
             check_time = log_time.strftime("%H:%M:%S")
@@ -184,4 +190,4 @@ if __name__ == "__main__":
     while True:
         fetch_and_process_logs()
         print("Waiting for the next cycle (2 minutes)...")
-        time.sleep(2 * 60) # change next cycle time according to need
+        time.sleep(2 * 60)  # change next cycle time according to need

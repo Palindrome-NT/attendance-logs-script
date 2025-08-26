@@ -8,3 +8,8 @@ python-dotenv==1.0.1
 pyzk==0.9
 requests==2.32.3
 urllib3==2.2.3
+pytz==2023.3
+pandas==2.2.3
+python-docx==1.1.2
+openpyxl==3.1.5
+hikvision-isapi-wrapper==0.3.4
